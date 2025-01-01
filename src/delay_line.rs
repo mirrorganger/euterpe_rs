@@ -14,6 +14,9 @@ pub struct DelayLine {
 }
 
 fn adjust_length_to_power_of_two(length: usize) -> usize {
+    if length == 0 || length == 1 {
+        return 1;
+    }
     let mut power_of_two = 1;
     while power_of_two < length {
         power_of_two *= 2;
@@ -67,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_delay_line() {
-        let test_sizes: Vec<usize> = vec![3, 4, 7, 16, 23, 64, 111, 256];
+        let test_sizes: Vec<usize> = vec![1, 2, 3, 4, 7, 16, 23, 64, 111, 256];
         for size in test_sizes {
             let adjust_size = adjust_length_to_power_of_two(size);
             let mut delay_line = DelayLine::new(adjust_size);
