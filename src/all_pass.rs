@@ -4,7 +4,6 @@ struct AllPass {
     delay_line: DelayLine,
     gain: f64,
     delay_index: f64,
-    freq_hz: f64,
 }
 
 fn get_length(delay_ms: f64, freq_hz: f64) -> usize {
@@ -17,21 +16,22 @@ fn get_length(delay_ms: f64, freq_hz: f64) -> usize {
 }
 
 impl AllPass {
-    pub fn new(freq_hz: f64, delay_max_ms: f64, gain: f64) -> Self {
+    pub fn new(delay_max_samples: usize) -> Self {
         AllPass {
-            delay_line: DelayLine::new(get_length(delay_max_ms, freq_hz)),
-            gain,
+            delay_line: DelayLine::new(delay_max_samples),
+            gain: 0.0,
             delay_index: 0.0,
-            freq_hz,
         }
+    }
+
+    pub fn prepare(&mut self, delay: f64, gain: f64) {
+        self.delay_index = delay;
+        self.gain = gain;
+        self.delay_line.clear();
     }
 
     pub fn set_gain(&mut self, gain: f64) {
         self.gain = gain;
-    }
-
-    pub fn set_delay(&mut self, delay_ms: f64) {
-        self.delay_index = delay_ms * self.freq_hz / 1000.0;
     }
 }
 
@@ -40,6 +40,27 @@ impl AudioProcessor<f64> for AllPass {
         let delayed = self.delay_line[self.delay_index as usize];
         let current = input + delayed * self.gain;
         self.delay_line.push(current);
-        delayed - current * self.gain
+        delayed - (current * self.gain)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_pass() {
+        let mut uut = AllPass::new(4);
+        uut.prepare(2.0, 0.5);
+        assert_eq!(uut.process(1.0), -0.5);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.75);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.375);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.1875);
     }
 }
