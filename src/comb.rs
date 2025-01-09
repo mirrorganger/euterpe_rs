@@ -1,5 +1,5 @@
-use Crate::{AudioProcessor, CircularBuffer, DelayLine};
-
+use crate::delay_line::{CircularBuffer, DelayLine};
+use crate::processor::AudioProcessor;
 struct Comb {
     delay_line: DelayLine,
     gain: f64,
@@ -32,5 +32,26 @@ impl AudioProcessor<f64> for Comb {
         let current = input + yn * self.gain;
         self.delay_line.push(current);
         yn
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_comb() {
+        let mut uut = Comb::new(4);
+        uut.prepare(2.0, 0.5);
+        assert_eq!(uut.process(1.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 1.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.5);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.25);
     }
 }
