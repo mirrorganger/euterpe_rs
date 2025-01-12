@@ -14,7 +14,7 @@ impl OnePoleLPF {
             z1: 0.0,
         }
     }
-    
+
     pub fn set_fb_gain(&mut self, gain: f64) {
         self.b1 = gain;
         self.a0 = 1.0 - gain;
@@ -28,3 +28,17 @@ impl AudioProcessor<f64> for OnePoleLPF {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_onepole_lpf() {
+        let mut uut = OnePoleLPF::new();
+        uut.set_fb_gain(0.5);
+        assert_eq!(uut.process(1.0), 0.5);
+        assert_eq!(uut.process(0.0), 0.25);
+        assert_eq!(uut.process(0.0), 0.125);
+        assert_eq!(uut.process(0.0), 0.0625);
+    }
+}
