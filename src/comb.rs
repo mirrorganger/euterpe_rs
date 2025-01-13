@@ -1,12 +1,12 @@
 use crate::delay_line::{CircularBuffer, DelayLine};
-use crate::onepole_lpf::OnePoleLPF;
 use crate::processor::AudioProcessor;
 struct Comb {
     delay_line: DelayLine,
     gain: f64,
     delay_index: f64,
     lpf_enabled: bool,
-    onepole_lpf: OnePoleLPF,
+    lpf_state: f64,
+    dampening: f64,
 }
 
 impl Comb {
@@ -16,7 +16,8 @@ impl Comb {
             gain: 0.0,
             delay_index: 0.0,
             lpf_enabled,
-            onepole_lpf: OnePoleLPF::new(),
+            lpf_state: 0.0,
+            dampening: 0.5,
         }
     }
 
@@ -31,17 +32,22 @@ impl Comb {
     }
 
     pub fn set_dampening(&mut self, dampening: f64) {
-        self.onepole_lpf.set_fb_gain(dampening);
+        self.dampening = dampening;
     }
 }
 
 impl AudioProcessor<f64> for Comb {
     fn process(&mut self, input: f64) -> f64 {
-        let mut yn = self.delay_line[self.delay_index as usize];
+        let yn = self.delay_line[self.delay_index as usize - 1];
+        let current: f64;
         if self.lpf_enabled {
-            yn = self.onepole_lpf.process(yn);
+            let g2 = self.dampening * (1.0 - self.gain);
+            let filtered = yn + g2 * self.lpf_state;
+            self.lpf_state = yn + g2 * self.lpf_state;
+            current = input + self.gain * filtered;
+        } else {
+            current = input + self.gain * yn;
         }
-        let current = input + yn * self.gain;
         self.delay_line.push(current);
         yn
     }
@@ -53,17 +59,27 @@ mod tests {
 
     #[test]
     fn test_comb() {
-        let mut uut = Comb::new(4,false);
+        let mut uut = Comb::new(4, false);
         uut.prepare(2.0, 0.5);
         assert_eq!(uut.process(1.0), 0.0);
         assert_eq!(uut.process(0.0), 0.0);
-        assert_eq!(uut.process(0.0), 0.0);
         assert_eq!(uut.process(0.0), 1.0);
-        assert_eq!(uut.process(0.0), 0.0);
         assert_eq!(uut.process(0.0), 0.0);
         assert_eq!(uut.process(0.0), 0.5);
         assert_eq!(uut.process(0.0), 0.0);
-        assert_eq!(uut.process(0.0), 0.0);
         assert_eq!(uut.process(0.0), 0.25);
+    }
+
+    #[test]
+    fn test_comb_lpf() {
+        let mut uut = Comb::new(4, true);
+        uut.prepare(2.0, 0.5);
+        uut.set_dampening(0.5);
+        assert_eq!(uut.process(1.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 1.0);
+        assert_eq!(uut.process(0.0), 0.0);
+        assert_eq!(uut.process(0.0), 0.5);
+        assert_eq!(uut.process(0.0), 0.125);
     }
 }
