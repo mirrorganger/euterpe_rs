@@ -92,4 +92,17 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_wrap_arround() {
+        let mut delay_line = DelayLine::new(2);
+        delay_line.push(1.0);
+        delay_line.push(2.0);
+        delay_line.push(3.0);
+        delay_line.push(4.0);
+        assert_eq!(delay_line[0], 4.0);
+        assert_eq!(delay_line[1], 3.0);
+    }
+
+
 }

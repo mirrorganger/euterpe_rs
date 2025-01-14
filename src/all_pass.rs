@@ -6,15 +6,6 @@ struct AllPass {
     delay_index: f64,
 }
 
-fn get_length(delay_ms: f64, freq_hz: f64) -> usize {
-    let delay_samples = (delay_ms * freq_hz / 1000.0) as usize;
-    if delay_samples == 0 {
-        1
-    } else {
-        delay_samples
-    }
-}
-
 impl AllPass {
     pub fn new(delay_max_samples: usize) -> Self {
         AllPass {
