@@ -4,3 +4,4 @@ mod comb;
 mod delay_line;
 mod onepole_lpf;
 mod processor;
+mod schroeder;
