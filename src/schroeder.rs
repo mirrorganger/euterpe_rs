@@ -17,7 +17,7 @@ fn get_length_in_samples(length_ms: f64, sample_rate_hz: f64) -> f64 {
 
 fn get_gain_from_rt60(delay_ms: f64, rt60_ms: f64) -> f64 {
     let base: f64 = 10.0;
-    base.powf(3.0 * delay_ms / rt60_ms)
+    base.powf(-3.0 * delay_ms / rt60_ms)
 }
 
 pub struct Schroeder {
@@ -99,10 +99,12 @@ impl AudioProcessor<f64> for Schroeder {
         for (index, (combs, _)) in self.combs.iter_mut().enumerate() {
             let mut comb_out = combs.process(pre_apf_out);
             if index % 2 == 0 {
-                comb_out *= -1.0
+                comb_out *= -1.0;
             };
             out += comb_out;
         }
+        out /= NUM_COMBS as f64;
+
         for (all_pass, _) in self.all_passes.iter_mut() {
             out = all_pass.process(out);
         }
