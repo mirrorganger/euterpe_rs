@@ -4,9 +4,10 @@ use crate::processor::AudioProcessor;
 
 const NUM_COMBS: usize = 4;
 const NUM_APF: usize = 2;
-
+const NUM_PRE_APF: usize = 2;
 const COMB_DELAYS_MS: [f64; NUM_COMBS] = [29.7, 32.2, 38.1, 45.6];
 const APF_DELAYS_MS: [f64; NUM_APF] = [2.3, 3.7];
+const PRE_APF_DELAYS_MS : [f64; NUM_PRE_APF] = [1.0, 2.0];
 const COMB_MAX_DELAY_MS: f64 = 50.0;
 const APF_MAX_DELAY_MS: f64 = 20.0;
 
@@ -22,6 +23,7 @@ fn get_gain_from_rt60(delay_ms: f64, rt60_ms: f64) -> f64 {
 pub struct Schroeder {
     combs: [(Comb, f64); NUM_COMBS],
     all_passes: [(AllPass, f64); NUM_APF],
+    pre_all_passes: [(AllPass, f64); NUM_PRE_APF],
     sample_rate: f64,
     dry_wet_mix: f64,
 }
@@ -29,7 +31,7 @@ pub struct Schroeder {
 impl Schroeder {
     pub fn new(sample_rate: f64) -> Self {
         let comb_delay_length = get_length_in_samples(COMB_MAX_DELAY_MS, sample_rate) as usize;
-        let apf_delay_length = get_length_in_samples(COMB_MAX_DELAY_MS, sample_rate) as usize;
+        let apf_delay_length = get_length_in_samples(APF_MAX_DELAY_MS, sample_rate) as usize;
 
         Schroeder {
             combs: [
@@ -42,6 +44,10 @@ impl Schroeder {
                 (AllPass::new(apf_delay_length), APF_DELAYS_MS[0]),
                 (AllPass::new(apf_delay_length), APF_DELAYS_MS[1]),
             ],
+            pre_all_passes: [
+                (AllPass::new(apf_delay_length), PRE_APF_DELAYS_MS[0]),
+                (AllPass::new(apf_delay_length), PRE_APF_DELAYS_MS[1]),
+            ],
             sample_rate,
             dry_wet_mix: 0.5,
         }
@@ -53,6 +59,10 @@ impl Schroeder {
             let gain = get_gain_from_rt60(*delay_ms, rt60_ms);
             comb.prepare(delay_samples, gain);
         }
+
+        self.pre_all_passes.iter_mut().for_each(|(apf, delay)| {
+            (*apf).prepare(get_length_in_samples(*delay, sample_rate),0.5 * (2f64).sqrt());
+        });
 
         for (all_pass, delay_ms) in self.all_passes.iter_mut() {
             let delay_samples = get_length_in_samples(*delay_ms, sample_rate);
@@ -80,8 +90,14 @@ impl Schroeder {
 impl AudioProcessor<f64> for Schroeder {
     fn process(&mut self, input: f64) -> f64 {
         let mut out: f64 = 0.0;
+        let mut pre_apf_out: f64 = 0.0;
+        
+        for (all_pass, _) in self.pre_all_passes.iter_mut() {
+            pre_apf_out = all_pass.process(input);
+        }
+
         for (index, (combs, _)) in self.combs.iter_mut().enumerate() {
-            let mut comb_out = combs.process(input);
+            let mut comb_out = combs.process(pre_apf_out);
             if index % 2 == 0 {
                 comb_out *= -1.0
             };
