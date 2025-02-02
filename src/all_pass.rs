@@ -1,6 +1,6 @@
 use crate::delay_line::{CircularBuffer, DelayLine};
 use crate::processor::AudioProcessor;
-struct AllPass {
+pub struct AllPass {
     delay_line: DelayLine,
     gain: f64,
     delay_index: f64,
