@@ -25,8 +25,7 @@ impl Lfo{
     }
 
     pub fn advance(&mut self) -> f32{
-        self.advance_counter();
-        match self.waveform_type{
+        let out = match self.waveform_type{
             WaveformType::Sine =>{
                 (self.phase * std::f32::consts::PI * 2.0).sin()
             },
@@ -37,7 +36,9 @@ impl Lfo{
             WaveformType::Sawtooth =>{
                 2.0 * self.phase - 1.0
             }
-        }
+        };
+        self.advance_counter();
+        out
     }
 
     fn advance_counter(&mut self){
@@ -53,4 +54,30 @@ impl Lfo{
     }
 
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use approx::assert_abs_diff_eq;
+
+    #[test]
+    fn test_lfo_saw(){
+        const FREQ : f32= 1.0;
+        const SAMPLE_RATE : f32 = 100.0;
+        const MAX_ERROR : f32 = 1.0e-4;
+        const STEPS_PER_CYCLE : usize = (SAMPLE_RATE / FREQ) as usize;
+        let mut lfo = Lfo::new(WaveformType::Sawtooth, FREQ, SAMPLE_RATE);
+        let mut output : Vec<f32> = Vec::new();
+
+
+        for _ in 0..STEPS_PER_CYCLE+1{
+            output.push(lfo.advance());
+        }        
+
+        assert_abs_diff_eq!(output[0], -1.0, epsilon = MAX_ERROR);    
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE/2], 0.0, epsilon = MAX_ERROR);    
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE], 1.0, epsilon = MAX_ERROR);    
+    }
+}
+
 
