@@ -9,6 +9,11 @@ pub fn is_increasing_buffer(vec: &[f32]) -> bool {
 }
 
 #[cfg(test)]
+pub fn is_decreasing_buffer(vec: &[f32]) -> bool {
+    vec.windows(2).all(|w| w[0] >= w[1])
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -25,5 +30,13 @@ mod tests {
         let non_increasing = [2.6, 6.8, 9.1, 9.0];
         assert!(is_increasing_buffer(&increasing));
         assert!(!is_increasing_buffer(&non_increasing));
+    }
+
+    #[test]
+    fn test_decreasing_buffer() {
+        let increasing = [10.0, 9.1, 6.8, 2.6];
+        let non_decreasing = [10.0, 9.1, 6.8, 6.9];
+        assert!(is_decreasing_buffer(&increasing));
+        assert!(!is_decreasing_buffer(&non_decreasing));
     }
 }
