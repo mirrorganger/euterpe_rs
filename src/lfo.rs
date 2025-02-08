@@ -89,4 +89,19 @@ mod test {
         assert!(is_decreasing_buffer(&output[0..STEPS_PER_CYCLE / 2]));
         assert!(is_increasing_buffer(&output[STEPS_PER_CYCLE / 2..]));
     }
+
+    #[test]
+    fn test_lfo_sine() {
+        let mut lfo = Lfo::new(WaveformType::Sine, FREQ, SAMPLE_RATE);
+        let mut output: Vec<f32> = Vec::new();
+        for _ in 0..STEPS_PER_CYCLE + 1 {
+            output.push(lfo.advance());
+        }
+        assert_abs_diff_eq!(output[0], 0.0, epsilon = MAX_ERROR);
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE / 4], 1.0, epsilon = MAX_ERROR);
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE / 2], 0.0, epsilon = MAX_ERROR);
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE * 3 / 4], -1.0, epsilon = MAX_ERROR);
+        assert_abs_diff_eq!(output[STEPS_PER_CYCLE], 0.0, epsilon = MAX_ERROR);
+        assert!(is_bounded_buffer(&output, -1.0, 1.0));
+    }
 }
