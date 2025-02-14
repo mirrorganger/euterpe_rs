@@ -39,9 +39,20 @@ impl Index<usize> for DelayLine {
     type Output = f64;
 
     fn index(&self, index: usize) -> &f64 {
-        assert!(index < self.buffer.len());
+        assert!(index < self.buffer.len(), "Index out of bounds");
         let offset = self.write_index.wrapping_sub(index + 1) & self.mask;
         &self.buffer[offset]
+    }
+}
+
+impl DelayLine {
+    pub fn get(&self, frac_index: f64) -> f64 {
+        let index = frac_index.floor() as usize;
+        assert!(index < self.buffer.len(), "Index out of bounds");
+        let frac = frac_index - index as f64;
+        let offset = self.write_index.wrapping_sub(index + 1) & self.mask;
+        let next_offset = self.write_index.wrapping_sub(index) & self.mask;
+        self.buffer[offset] * (1.0 - frac) + self.buffer[next_offset] * frac
     }
 }
 
@@ -104,5 +115,36 @@ mod tests {
         assert_eq!(delay_line[1], 3.0);
     }
 
+    #[test]
+    fn test_get() {
+        let mut delay_line = DelayLine::new(4);
+        let test_values: Vec<f64> = vec![1.0, 2.0, 3.0, 4.0];
+        test_values.iter().for_each(|value| delay_line.push(*value));
 
+        for i in 0..test_values.len() - 1 {
+            assert_eq!(
+                delay_line.get(i as f64),
+                test_values[test_values.len() - 1 - i]
+            );
+        }
+
+        assert_eq!(delay_line.get(0.5), 2.5);
+        assert_eq!(delay_line.get(1.5), 3.5);
+        assert_eq!(delay_line.get(2.5), 2.5);
+        assert_eq!(delay_line.get(3.5), 1.5);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_out_of_bounds() {
+        let delay_line = DelayLine::new(1);
+        let _x = delay_line[2];
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_out_of_bounds_frac() {
+        let delay_line = DelayLine::new(1);
+        let _x = delay_line.get(2.0);
+    }
 }
