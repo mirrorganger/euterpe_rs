@@ -1,10 +1,10 @@
-enum WaveformType {
+pub enum WaveformType {
     Sine,
     Triangle,
     Sawtooth,
 }
 
-struct Lfo {
+pub struct Lfo {
     phase: f32,
     phase_increment: f32,
     waveform_type: WaveformType,
