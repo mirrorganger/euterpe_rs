@@ -54,29 +54,38 @@ mod tests {
 
     use super::*;
     use crate::test_helpers::is_bounded_buffer;
-    #[test]
-    fn test_triangular_modulation() {
-        let delay_ms: f32 = 10.0;
-        let mod_freq: f32 = 100.0;
-        let sample_rate: f32 = 1000.0; // 1ms -> 1sample
-        let delay_samples = (delay_ms) as usize;
-        let mod_samples = 2 * (0.1 * delay_samples as f32) as usize; // bipolar, +1, -1 sample
 
-        let mut mod_delay =
-            ModulatedDelay::new(delay_ms, mod_freq, WaveformType::Triangle, sample_rate);
-        let samples: Vec<f64> = (0..delay_samples + mod_samples).map(|x| x as f64).collect();
-        let mut out_samples: Vec<f64> = Vec::new();
+    const DELAY_MS: f32 = 10.0;
+    const MOD_FREQ: f32 = 100.0;
+    const SAMPLE_RATE: f32 = 1000.0; // 1ms -> 1sample
+    const DELAY_SAMPLES: usize = (DELAY_MS) as usize;
+    const MOD_SAMPLES: usize = 2 * (0.1 * DELAY_SAMPLES as f32) as usize; // bipolar, +1, -1 sample
+                                                                          //
+    macro_rules! test_modulation {
+        ($name:ident, $wave_type:expr) => {
+            #[test]
+            fn $name() {
+                let mut mod_delay =
+                    ModulatedDelay::new(DELAY_MS, MOD_FREQ, $wave_type, SAMPLE_RATE);
+                let samples: Vec<f64> =
+                    (0..DELAY_SAMPLES + MOD_SAMPLES).map(|x| x as f64).collect();
+                let mut out_samples: Vec<f64> = Vec::new();
 
-        for &sample in samples.iter() {
-            mod_delay.push(sample);
-        }
+                for &sample in samples.iter() {
+                    mod_delay.push(sample);
+                }
 
-        for _ in 0..1123 {
-            out_samples.push(mod_delay.advance());
-        }
-
-        let lower_bound = samples[0];
-        let upper_bound = samples[mod_samples];
-        assert!(is_bounded_buffer(&out_samples, lower_bound, upper_bound));
+                for _ in 0..12345 {
+                    out_samples.push(mod_delay.advance());
+                }
+                let lower_bound = samples[0];
+                let upper_bound = samples[MOD_SAMPLES];
+                assert!(is_bounded_buffer(&out_samples, lower_bound, upper_bound));
+            }
+        };
     }
+
+    test_modulation!(test_sine_modulation, WaveformType::Sine);
+    test_modulation!(test_triangular_modulation, WaveformType::Triangle);
+    test_modulation!(test_sawtooth_modulation, WaveformType::Sawtooth);
 }
