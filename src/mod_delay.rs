@@ -7,7 +7,7 @@ pub struct ModulatedDelay {
     lfo_depth: f32,
     mod_width_ms: f32,
     delay_ms: f32,
-    sample_rate: f32,
+    sample_rate_hz: f32,
 }
 
 const MAX_DELAY_MS: f32 = 100.0;
@@ -20,18 +20,20 @@ impl ModulatedDelay {
             lfo_depth: 1.0,
             mod_width_ms: 0.1 * delay_ms,
             delay_ms,
-            sample_rate: sample_rate_hz,
+            sample_rate_hz,
         }
     }
 
-    pub fn prepare(&mut self, delay_ms: f32, mod_freq: f32) {
+    pub fn prepare(&mut self, delay_ms: f32, mod_freq: f32, sample_rate_hz: f32) {
+        self.sample_rate_hz = sample_rate_hz;
+        self.delay_line.clear();
         self.set_delay(delay_ms);
-        self.lfo.update(mod_freq, self.sample_rate);
+        self.lfo.prepare(mod_freq, sample_rate_hz);
     }
 
     pub fn advance(&mut self) -> f64 {
         let mod_delay_ms = self.lfo.advance() * self.lfo_depth * self.mod_width_ms;
-        let delay_samples = (self.delay_ms + mod_delay_ms) * self.sample_rate / 1000.0;
+        let delay_samples = (self.delay_ms + mod_delay_ms) * self.sample_rate_hz / 1000.0;
         self.delay_line.get(delay_samples as f64)
     }
 

@@ -19,8 +19,8 @@ impl Lfo {
         }
     }
 
-    pub fn update(&mut self, frequency: f32, sample_rate: f32) {
-        self.phase_increment = frequency / sample_rate;
+    pub fn prepare(&mut self, frequency: f32, sample_rate_hz: f32) {
+        self.phase_increment = frequency / sample_rate_hz;
     }
 
     pub fn advance(&mut self) -> f32 {
