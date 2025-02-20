@@ -1,4 +1,4 @@
-## euterpe-rs
+## euterpe_rs
 
 A dsp library build with Rust.
 
