@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-#![cfg(test)]
+
 mod test_helpers;
 
 pub mod all_pass;
@@ -10,3 +10,4 @@ pub mod lfo;
 pub mod mod_delay;
 pub mod onepole_lpf;
 pub mod processor;
+

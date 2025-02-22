@@ -49,6 +49,11 @@ impl ModulatedDelay {
         self.delay_ms = delay_ms;
         self.mod_width_ms = 0.1 * delay_ms;
     }
+
+    pub fn set_lfo_freq(&mut self, freq: f32) {
+        self.lfo.prepare(freq, self.sample_rate_hz);
+    }
+
 }
 
 #[cfg(test)]

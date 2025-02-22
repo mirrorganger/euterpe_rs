@@ -19,6 +19,10 @@ impl ModAllPass{
     pub fn prepare(&mut self, delay_ms: f32, mod_freq: f32, sample_rate_hz: f32){
         self.mod_delay.prepare(delay_ms, mod_freq,sample_rate_hz);
     }
+
+    pub fn set_lfo_freq(&mut self, freq: f32){
+        self.mod_delay.set_lfo_freq(freq);
+    }
 }
 
 
