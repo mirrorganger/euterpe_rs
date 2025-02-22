@@ -1,15 +1,15 @@
 #[cfg(test)]
-pub fn is_bounded_buffer(vec: &[f32], min: f32, max: f32) -> bool {
-    vec.iter().all(|&x| x >= min && x <= max)
+pub fn is_bounded_buffer<T : PartialOrd>(vec: &[T], min: T, max: T) -> bool {
+    vec.iter().all(|x| *x >= min && *x <= max)
 }
 
 #[cfg(test)]
-pub fn is_increasing_buffer(vec: &[f32]) -> bool {
+pub fn is_increasing_buffer<T: PartialOrd>(vec: &[T]) -> bool {
     vec.windows(2).all(|w| w[0] <= w[1])
 }
 
 #[cfg(test)]
-pub fn is_decreasing_buffer(vec: &[f32]) -> bool {
+pub fn is_decreasing_buffer<T: PartialOrd>(vec: &[T]) -> bool {
     vec.windows(2).all(|w| w[0] >= w[1])
 }
 

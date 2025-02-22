@@ -51,7 +51,7 @@ impl DelayLine {
         assert!(index < self.buffer.len(), "Index out of bounds");
         let frac = frac_index - index as f64;
         let offset = self.write_index.wrapping_sub(index + 1) & self.mask;
-        let next_offset = self.write_index.wrapping_sub(index) & self.mask;
+        let next_offset = self.write_index.wrapping_sub(index + 2) & self.mask;
         self.buffer[offset] * (1.0 - frac) + self.buffer[next_offset] * frac
     }
 }
@@ -124,14 +124,14 @@ mod tests {
         for i in 0..test_values.len() - 1 {
             assert_eq!(
                 delay_line.get(i as f64),
-                test_values[test_values.len() - 1 - i]
+                test_values[test_values.len() - 1 - i],
             );
         }
 
-        assert_eq!(delay_line.get(0.5), 2.5);
-        assert_eq!(delay_line.get(1.5), 3.5);
-        assert_eq!(delay_line.get(2.5), 2.5);
-        assert_eq!(delay_line.get(3.5), 1.5);
+        assert_eq!(delay_line.get(0.5), 3.5);
+        assert_eq!(delay_line.get(1.5), 2.5);
+        assert_eq!(delay_line.get(2.5), 1.5);
+        assert_eq!(delay_line.get(3.5), 2.5);
     }
 
     #[test]
