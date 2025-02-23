@@ -12,7 +12,7 @@ impl ModAllPass{
     pub fn new (delay_ms : f32, mod_freq: f32, mod_wave: WaveformType, sample_rate_hz: f32) -> Self{
         ModAllPass{
             mod_delay: ModulatedDelay::new(delay_ms, mod_freq, mod_wave, sample_rate_hz),
-            gain: 0.0
+            gain: 0.5
         }
     }
 
